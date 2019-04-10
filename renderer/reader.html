@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>ReadIt Reader</title>
+
+    <link rel="stylesheet" href="../bower_components/bulma/css/bulma.css">
+    <link rel="stylesheet" href="../bower_components/font-awesome/css/all.min.css">
+    <link rel="stylesheet" href="./main.css">
+    <style media="screen">
+        html, body, webview {
+            height: 100%;
+            width: 100%;
+        }
+        ::-webkit-scrollbar { 
+            display: none; 
+        }
+    </style>
+
+  </head>
+  <body>
+    <!--- loading spinner & load fail message -->
+    <section id="loader" class="hero is-fullheight has-text-centered">
+        <div class="hero-body">
+            <div class="container">
+                <div class="busy">
+                    <h1 class="title">
+                        <span class="icon is-large">
+                            <i class="fas fa-asterisk fa-spin fa-2x"></i>
+                        </span>
+                    </h1>
+                </div>
+                <div class="failed is-hidden">
+                    <h1 class="title">Failed to Load</h1>
+                    <h2 class="subtitle">Please check your network connection.</h2>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <a href="#" id="mark-read" class="is-hidden">
+        <div class="block">
+            <span class="tag is-large is-primary">
+                <span class="icon">
+                    <i class="fas fa-check fa-inverse"></i>
+                </span>&nbsp; Read
+            </span>
+        </div>
+    </a>
+
+    <webview src="about:blank"></webview>
+
+    <script>
+        $ = require('jquery')
+
+        // get query params
+        const queryString = require('query-string')
+        const queryParams = queryString.parse(location.search)
+
+        // get item index
+        const itemIndex = queryParams.itemIndex
+
+        // set final url
+        const url = decodeURIComponent(queryParams.url)
+
+        // load remote content once webview is ready
+        $('webview').one('dom-ready', e => {
+
+            // load item content url into webview
+            e.currentTarget.loadURL(url)
+
+            // fade our spinner out on load
+        }).one('did-finish-load', () => {
+            $('#loader').fadeOut(100)
+
+            // show mark read button
+            $('#mark-read').removeClass('is-hidden')
+
+            // handle failed to load
+        }).on('did-fail-load', () => {
+            $('#mark-read').addClass('is-hidden');
+            $('#loader .busy').addClass('is-hidden')
+            $('#loader').fadeIn(100)
+            $('#loader .failed').removeClass('is-hidden')
+        })
+
+        // handle mark read click (delete)
+        $('#mark-read').click(() => {
+
+            // access parent window
+            window.opener.eval(`deleteItem(${itemIndex})`)
+            window.close()
+        })
+    </script>
+  </body>
+</html>
